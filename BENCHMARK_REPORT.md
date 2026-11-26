@@ -70,7 +70,7 @@ Sources: `reports/eval_v1.json`, `eval_v2.json`, `eval_v2_fixed.json`.
 
 ### Exercise 7.4: Đọc dashboard
 
-Ảnh Grafana ghi nhận khoảng 27,9 request/s, p95 khoảng 1,92 giây và avg khoảng 0,7 giây tại thời điểm chụp. Chênh lệch cho thấy một nhóm request có tail latency cao dù phần lớn request nhanh hơn; percentile phản ánh trải nghiệm của nhóm request chậm rõ hơn số trung bình.
+Ảnh Grafana ghi nhận khoảng 27,9 request/s, error rate 20,18%, p95 khoảng 1,92 giây và avg khoảng 0,7 giây tại thời điểm chụp. Chênh lệch giữa avg và p95 cho thấy một nhóm request có tail latency cao dù phần lớn request nhanh hơn; percentile phản ánh trải nghiệm của nhóm request chậm rõ hơn số trung bình. Error rate cao xuất hiện trong thí nghiệm alerts/chaos, không phải trong các batch load test local ở phần 2.
 
 Dashboard có panel `Requests/s theo instance` để so sánh traffic giữa hai replica, nhưng ảnh đã nộp không hiển thị panel đó. Vì vậy bằng chứng hiện có chưa đủ để kết luận traffic được chia đều giữa hai replica.
 

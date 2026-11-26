@@ -185,3 +185,5 @@ Benchmark local chạy 300 request mỗi lượt ở bốn mức concurrency và
 | 26/11/2026 | Deploy agent lên Railway và đo Part 7. | Codex hỗ trợ deploy, kiểm tra HTTP, chạy benchmark và tổng hợp bằng chứng. | Sinh viên xác nhận đăng nhập Railway trực tiếp. Xem kết quả deploy trong `DEPLOYMENT.md` và các số đo trong `BENCHMARK_REPORT.md`. |
 
 Phần sinh viên tự thực hiện: đăng nhập Railway, mở project `k5-day14`, kiểm tra sơ đồ dịch vụ thấy `agent` và `Redis` đều Online, rồi kiểm tra deployment `c40f1f15` ở trạng thái Active và log `/health`, `/ready` trả HTTP 200. Ảnh chụp dashboard và deployment được lưu trong `screenshots/`.
+
+| 26/11/2026 | Bổ sung câu trả lời Part 7 sau khi rà rubric K5. | Codex đối chiếu Exercise 7.4, quality gate và bằng chứng Grafana, cập nhật giải thích trong báo cáo benchmark. | Đã kiểm tra diff và đối chiếu số liệu với ảnh/report hiện có. |
