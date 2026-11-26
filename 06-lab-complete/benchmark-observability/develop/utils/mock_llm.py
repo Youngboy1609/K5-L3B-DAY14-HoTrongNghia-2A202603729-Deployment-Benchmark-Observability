@@ -58,6 +58,9 @@ class LLMResult:
 # Mỗi entry: (các từ khoá kích hoạt, nội dung tài liệu)
 # ─────────────────────────────────────────────────────────
 KNOWLEDGE_BASE: list[tuple[list[str], str]] = [
+    (["deploy", "deployment", "đưa code"],
+     "Deploy là đưa code và các dependencies lên server hoặc nền tảng cloud để người dùng truy cập."
+     " Quy trình thường build image rồi chạy image đó trong môi trường production."),
     (["multi-stage", "multi stage"],
      "Multi-stage build tách Dockerfile thành stage builder (cài compiler, build dependencies) "
      "và stage runtime chỉ copy kết quả cần thiết. Image cuối nhỏ hơn và ít lỗ hổng bảo mật hơn."),
@@ -78,12 +81,18 @@ KNOWLEDGE_BASE: list[tuple[list[str], str]] = [
     (["rate limit", "429"],
      "Rate limiting giới hạn số request mỗi client trong một cửa sổ thời gian, ví dụ 10 req/phút. "
      "Vượt giới hạn thì trả HTTP 429 Too Many Requests kèm header Retry-After."),
+    (["jwt", "api key", "xác thực"],
+     "JWT là token có payload được ký, có thể chứa thời hạn hết hạn và server kiểm tra chữ ký mà không cần lưu session. "
+     "API key thường là chuỗi bí mật tĩnh dùng để nhận diện client và không tự mang thông tin hết hạn."),
     (["stateless", "redis", "session"],
      "Stateless nghĩa là instance không giữ state trong memory; session được lưu ở Redis. "
      "Nhờ vậy có thể scale ngang nhiều instance sau load balancer."),
     (["load balancer", "nginx", "round-robin"],
      "Load balancer như Nginx phân phối request tới nhiều instance theo round-robin, "
      "và bỏ qua instance không healthy."),
+    (["hpa", "kubernetes", "autoscal"],
+     "Kubernetes HPA (Horizontal Pod Autoscaler) scale số pod dựa trên CPU, memory và custom metrics "
+     "như request rate hoặc latency."),
     (["p95", "p99", "percentile", "tail latency", "trung bình"],
      "Percentile p95 là ngưỡng mà 95% request nhanh hơn. Latency trung bình (average) che giấu "
      "tail latency, nên SLO thường đặt theo p95 hoặc p99."),
@@ -103,7 +112,7 @@ KNOWLEDGE_BASE: list[tuple[list[str], str]] = [
     (["token", "cost", "chi phí", "budget"],
      "Chi phí LLM tính theo token: cost = input_tokens x giá input + output_tokens x giá output. "
      "Cần theo dõi cost theo thời gian thực và đặt budget alert."),
-    (["golden dataset", "eval", "đánh giá chất lượng", "regression"],
+    (["golden dataset", "eval", "đánh giá chất lượng", "regression", "trước khi deploy"],
      "Eval chất lượng dùng golden dataset: bộ câu hỏi có đáp án mong đợi. Chạy eval trước mỗi lần deploy "
      "để bắt regression, ví dụ accuracy giảm so với phiên bản trước."),
     (["log", "logging", "json"],

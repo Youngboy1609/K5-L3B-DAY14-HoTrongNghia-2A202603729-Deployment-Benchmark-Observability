@@ -9,10 +9,19 @@
 #
 # Bản dưới đây build và chạy được nhưng CHƯA đạt yêu cầu nào ở trên.
 # ============================================================
-FROM python:3.11
+FROM python:3.11-slim AS builder
 
 WORKDIR /app
-COPY . .
-RUN pip install -r requirements.txt
+COPY requirements.txt .
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
-CMD uvicorn app.main:app --host 0.0.0.0 --port 8000
+FROM python:3.11-slim
+WORKDIR /app
+COPY --from=builder /install /usr/local
+COPY . .
+RUN useradd --create-home --shell /usr/sbin/nologin agent
+USER agent
+ENV PYTHONUNBUFFERED=1
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD python -c "import os,urllib.request; urllib.request.urlopen('http://127.0.0.1:' + os.getenv('PORT','8000') + '/health')"
+
+CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
