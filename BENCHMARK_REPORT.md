@@ -55,6 +55,10 @@ Sources: `reports/eval_v1.json`, `eval_v2.json`, `eval_v2_fixed.json`.
 
 **Nhận xét trade-off:** v2 tăng độ dài trung bình từ 57.0 lên 109.1 tokens nhưng accuracy tăng mạnh lên 91.3%. Bản sửa KB tăng nhẹ lên 117.4 tokens và cost tổng lên 0.000818 USD, đổi lại đạt quality gate 100% với không có regression; cost/câu đúng vẫn khoảng 0.000036 USD.
 
+### Quality gate trong CI
+
+`run_eval.py` trả exit code `0` khi accuracy đạt `--min-accuracy` và không có regression so với `--baseline`; nếu một điều kiện không đạt, script trả exit code `1`. CI có thể chạy eval với golden dataset và baseline đã chấp nhận, rồi chỉ cho phép merge khi bước eval thành công. Trong kết quả nộp, `eval_v2_fixed.json` đạt 23/23, accuracy 100%, không có regression và quality gate pass.
+
 ## 4. Observability stack
 
 - [Grafana khi có tải](screenshots/grafana-dashboard.png)
@@ -63,6 +67,14 @@ Sources: `reports/eval_v1.json`, `eval_v2.json`, `eval_v2_fixed.json`.
 - [Prometheus với ba alert cùng firing](screenshots/prometheus-alert-firing.png)
 
 `promtool test rules alert_rules_test.yml` trả `SUCCESS`. Lượt quan sát A–C áp dụng ba thay đổi cùng lúc, sau đó chạy Locust với 60 user, ramp 10 user/s trong 5 phút. Thời gian được tính từ lúc Locust bắt đầu đến mẫu `ALERTS{alertstate="firing"}` đầu tiên, với bước truy vấn 5 giây. Các thay đổi được bật cùng lúc nên số đo thể hiện tác động kết hợp của cấu hình.
+
+### Exercise 7.4: Đọc dashboard
+
+Ảnh Grafana ghi nhận khoảng 27,9 request/s, p95 khoảng 1,92 giây và avg khoảng 0,7 giây tại thời điểm chụp. Chênh lệch cho thấy một nhóm request có tail latency cao dù phần lớn request nhanh hơn; percentile phản ánh trải nghiệm của nhóm request chậm rõ hơn số trung bình.
+
+Dashboard có panel `Requests/s theo instance` để so sánh traffic giữa hai replica, nhưng ảnh đã nộp không hiển thị panel đó. Vì vậy bằng chứng hiện có chưa đủ để kết luận traffic được chia đều giữa hai replica.
+
+Input tokens/s thường lớn hơn output tokens/s vì mỗi request gửi prompt cùng context/knowledge vào model, trong khi output chỉ là phần câu trả lời được sinh ra. Qua Nginx, `curl http://localhost:8080/metrics` trả HTTP 404 theo cấu hình. Nginx chặn route này để không công khai thông tin metrics; Prometheus scrape trực tiếp agent trong mạng Docker nội bộ.
 
 | Thí nghiệm | Alert firing | Thời gian tới firing | Panel rõ nhất |
 |---|---|---|---|
