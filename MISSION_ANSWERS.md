@@ -116,18 +116,31 @@ Cloud Build chạy pytest trước, sau đó build image gắn `$COMMIT_SHA` và
 
 ### Exercise 4.1–4.3: Test results
 
-```text
-Kiểm tra API production bằng tài khoản mẫu `student` và `demo123` trên cổng loopback `18084`. Token không được ghi vào repo:
-- Không có JWT: `POST /ask` -> 401.
-- JWT hợp lệ: `POST /ask` -> 200.
-- 11 request liên tiếp với cùng token: `200,200,200,200,200,200,200,200,200,429,429`.
+Chạy lại app mẫu trong `04-api-gateway/production/` tại `127.0.0.1:18084` ngày 26/11/2026. Dưới đây là dòng trạng thái và các header liên quan trích từ output `curl -i` cho `POST /ask`. JWT chỉ được dùng trong request local.
+
+```http
+HTTP/1.1 401 Unauthorized
+www-authenticate: Bearer
+content-type: application/json
+
+HTTP/1.1 200 OK
+content-type: application/json
+
+HTTP/1.1 429 Too Many Requests
+x-ratelimit-limit: 10
+x-ratelimit-remaining: 0
+x-ratelimit-reset: 1795679033
+retry-after: 59
+content-type: application/json
+```
+
+Khi gửi 11 request liên tiếp với cùng JWT sau khi khởi động app, 10 request đầu trả `200` và request thứ 11 trả `429`. `retry-after: 59` là thời gian chờ tính bằng giây tại lần đo này.
 
 Các quy tắc đọc từ source:
 - API key develop: thiếu key -> 401, key sai -> 403, key đúng -> 200.
 - JWT production: `POST /auth/token` với `student/demo123`, token hết hạn sau 60 phút.
 - Rate limiter dùng sliding-window counter in-memory, user 10 request/phút, admin 100 request/phút; vượt giới hạn -> 429 và `Retry-After`.
-- Cost guard kiểm tra trước khi gọi mock LLM, ngân sách user $1/ngày và global $10/ngày; vượt user budget -> 402.
-```
+- Cost guard kiểm tra ngân sách trước khi gọi mock LLM. Ngân sách là $1/ngày cho mỗi user và $10/ngày cho toàn hệ thống. Vượt ngân sách của user trả `402`.
 
 ### Exercise 4.4: Cost guard implementation
 
@@ -185,5 +198,6 @@ Benchmark local chạy 300 request mỗi lượt ở bốn mức concurrency và
 | 26/11/2026 | Deploy agent lên Railway và đo Part 7. | Codex hỗ trợ deploy, kiểm tra HTTP, chạy benchmark và tổng hợp bằng chứng. | Sinh viên xác nhận đăng nhập Railway trực tiếp. Xem kết quả deploy trong `DEPLOYMENT.md` và các số đo trong `BENCHMARK_REPORT.md`. |
 | 26/11/2026 | Bổ sung câu trả lời Part 7 sau khi rà rubric K5. | Codex đối chiếu Exercise 7.4, quality gate và bằng chứng Grafana, cập nhật giải thích trong báo cáo benchmark. | Codex đối chiếu số liệu với ảnh và báo cáo hiện có. |
 | 26/11/2026 | Chạy lại observability stack và cập nhật bằng chứng. | Codex chạy Locust, truy vấn Prometheus, đối chiếu log với Jaeger và cập nhật báo cáo. | Kết quả và ảnh từ lượt chạy lại nằm trong `BENCHMARK_REPORT.md`. |
+| 26/11/2026 | Bổ sung output `curl -i` cho CP3. | Codex chạy lại app mẫu local và trích dòng trạng thái cùng các header liên quan. | Codex đối chiếu ba mã HTTP với log Uvicorn và chỉ lưu phần phản hồi không chứa JWT. |
 
 Phần sinh viên tự thực hiện: đăng nhập Railway, mở project `k5-day14`, kiểm tra sơ đồ dịch vụ thấy `agent` và `Redis` đều Online, rồi kiểm tra deployment `c40f1f15` ở trạng thái Active và log `/health`, `/ready` trả HTTP 200. Ảnh chụp dashboard và deployment được lưu trong `screenshots/`.
