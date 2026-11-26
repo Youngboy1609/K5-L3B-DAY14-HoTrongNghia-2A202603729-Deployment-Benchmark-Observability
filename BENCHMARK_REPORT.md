@@ -70,11 +70,13 @@ Sources: `reports/eval_v1.json`, `eval_v2.json`, `eval_v2_fixed.json`.
 
 ### Exercise 7.4: Đọc dashboard
 
-Ảnh Grafana ghi nhận khoảng 27,9 request/s, error rate 20,18%, p95 khoảng 1,92 giây và avg khoảng 0,7 giây tại thời điểm chụp. Chênh lệch giữa avg và p95 cho thấy một nhóm request có tail latency cao dù phần lớn request nhanh hơn; percentile phản ánh trải nghiệm của nhóm request chậm rõ hơn số trung bình. Error rate cao xuất hiện trong thí nghiệm alerts/chaos, không phải trong các batch load test local ở phần 2.
+Ảnh Grafana ghi lại lượt Locust với 30 user, tăng 5 user/giây, từ 14:28:12 đến 14:30:10 GMT+7 ngày 26/11/2026. Dashboard hiển thị 19,0 request/giây, error rate 0,57% và p95 296,48 ms. Mẫu Prometheus lúc 14:29:35 cho thấy latency trung bình 237,46 ms. p95 cao hơn trung bình vì một phần request mất nhiều thời gian xử lý hơn. Tỷ lệ lỗi trên dashboard lấy theo cửa sổ một phút, còn Locust ghi nhận 21 lỗi 503 trên 2.187 request `/ask` (0,96%) trong cả lượt. Trace và log bên dưới xác nhận lỗi 503 đến từ mock LLM.
 
-Dashboard có panel `Requests/s theo instance` để so sánh traffic giữa hai replica, nhưng ảnh đã nộp không hiển thị panel đó. Vì vậy bằng chứng hiện có chưa đủ để kết luận traffic được chia đều giữa hai replica.
+Panel `Requests/s theo instance` cho thấy cả ba replica đều nhận tải. Lúc 14:29:35 GMT+7, truy vấn của panel ghi nhận 6,16, 5,95 và 6,25 request/giây lần lượt ở `172.22.0.5:8000`, `172.22.0.6:8000` và `172.22.0.7:8000`. Ở mẫu này, Nginx phân tải gần đều giữa ba replica, với chênh lệch khoảng 0,31 request/giây giữa replica cao nhất và thấp nhất.
 
-Input tokens/s thường lớn hơn output tokens/s vì mỗi request gửi prompt cùng context/knowledge vào model, trong khi output chỉ là phần câu trả lời được sinh ra. Qua Nginx, `curl http://localhost:8080/metrics` trả HTTP 404 theo cấu hình. Nginx chặn route này để không công khai thông tin metrics; Prometheus scrape trực tiếp agent trong mạng Docker nội bộ.
+Mẫu Prometheus lúc 14:29:35 ghi nhận khoảng 1.335 input tokens/giây và 711 output tokens/giây. Input gồm prompt cùng ngữ cảnh truy xuất, còn output là câu trả lời được sinh ra. `curl http://localhost:8080/metrics` qua Nginx trả HTTP 404. Prometheus truy cập trực tiếp `/metrics` của agent qua mạng Docker nội bộ để thông tin vận hành không bị công khai qua proxy.
+
+### Alerts và chaos
 
 | Thí nghiệm | Alert firing | Thời gian tới firing | Panel rõ nhất |
 |---|---|---|---|
@@ -102,18 +104,22 @@ Trích các trường từ dòng log `http_request` cùng `trace_id`.
 }
 ```
 
-Trace lỗi `95464bd25705236194af707dcaf2795c` trả HTTP 503 sau khoảng 107 ms. Span `chat mock-llm-small` có event `exception` với thông báo `Upstream LLM error: 503 Service Unavailable (mock)`.
+Trace lỗi `feba00a88914219a65c79e3465701e00` trả HTTP 503 sau 90,4 ms trong Jaeger. Span `chat mock-llm-small` mất 73,6 ms và có event `exception` với thông báo `Upstream LLM error: 503 Service Unavailable (mock)`. Dòng log HTTP cùng trace ghi thời gian 90,0 ms.
+
+```json
+{"ts":"2026-11-26T07:28:27.602576+00:00","level":"INFO","service":"observable-agent","instance":"26fbb1b11154","event":"http_request","trace_id":"feba00a88914219a65c79e3465701e00","span_id":"d8add24f97828c77","request_id":"88bbf9c9ed78","method":"POST","route":"/ask","status":503,"ms":90.0}
+```
 
 ## 5. Benchmark scaling
 
 | Số instance | RPS | p50 (ms) | p95 (ms) | p99 (ms) | Failures |
 |---:|---:|---:|---:|---:|---:|
-| 1 | 66.33 | 190 | 220 | 1700 | 77 / 7,892 (0.97%) |
-| 3 | 66.19 | 190 | 220 | 1700 | 62 / 7,888 (0.79%) |
+| 1 | 66.27 | 190 | 220 | 1700 | 78 / 7,884 (0.99%) |
+| 3 | 66.19 | 190 | 220 | 1700 | 76 / 7,886 (0.96%) |
 
 Sources: `benchmark-results/scale_1_stats.csv`, `scale_3_stats.csv`.
 
-**Giải thích:** Mỗi lượt chạy 100 user, ramp 10 user/s trong 2 phút. Bảng dùng dòng `Aggregated` của CSV. RPS gần như giữ nguyên từ 66,33 đến 66,19 và p99 vẫn 1.700 ms. Tỷ lệ lỗi trong hai lượt lần lượt là 0,97% và 0,79%. Với một lượt cho mỗi cấu hình và lỗi mock được mô phỏng ngẫu nhiên, dữ liệu chưa cho thấy tăng replica làm giảm lỗi hay cải thiện thông lượng ở mức tải này.
+**Giải thích:** Chạy lại hai lượt với 100 user, tăng 10 user/giây, trong 2 phút mỗi lượt. Dùng `docker compose exec -T locust locust ...` trong container Locust đang chạy để giữ số replica đã chọn. Bảng lấy dòng `Aggregated` từ CSV của Locust. Thông lượng gần như giữ nguyên, từ 66,27 xuống 66,19 request/giây, và p99 đều là 1.700 ms. Lỗi trong hai lượt đều là HTTP 503 trên `/ask`, với tỷ lệ lần lượt 0,99% và 0,96%. Với một lượt cho mỗi cấu hình và lỗi mock ngẫu nhiên, dữ liệu chưa cho thấy tăng replica cải thiện thông lượng hoặc tỷ lệ lỗi ở mức tải này.
 
 ## 6. Kết luận
 

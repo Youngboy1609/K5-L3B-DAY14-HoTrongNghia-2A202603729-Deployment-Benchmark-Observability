@@ -183,7 +183,7 @@ Benchmark local chạy 300 request mỗi lượt ở bốn mức concurrency và
 | 25–26/11/2026 | Đọc rubric, lập kế hoạch và phân chia các phần của lab. | Codex đối chiếu yêu cầu, đề xuất thứ tự chạy và hỗ trợ soạn báo cáo. | Các kết quả runtime được ghi ở từng Part theo lệnh đã chạy. |
 | 25–26/11/2026 | Hoàn thiện agent Part 6 và kiểm tra cấu hình production. | Codex dùng subagent hỗ trợ triển khai code và chạy checker. | Xem output checker ở trên. |
 | 26/11/2026 | Deploy agent lên Railway và đo Part 7. | Codex hỗ trợ deploy, kiểm tra HTTP, chạy benchmark và tổng hợp bằng chứng. | Sinh viên xác nhận đăng nhập Railway trực tiếp. Xem kết quả deploy trong `DEPLOYMENT.md` và các số đo trong `BENCHMARK_REPORT.md`. |
+| 26/11/2026 | Bổ sung câu trả lời Part 7 sau khi rà rubric K5. | Codex đối chiếu Exercise 7.4, quality gate và bằng chứng Grafana, cập nhật giải thích trong báo cáo benchmark. | Codex đối chiếu số liệu với ảnh và báo cáo hiện có. |
+| 26/11/2026 | Chạy lại observability stack và cập nhật bằng chứng. | Codex chạy Locust, truy vấn Prometheus, đối chiếu log với Jaeger và cập nhật báo cáo. | Kết quả và ảnh từ lượt chạy lại nằm trong `BENCHMARK_REPORT.md`. |
 
 Phần sinh viên tự thực hiện: đăng nhập Railway, mở project `k5-day14`, kiểm tra sơ đồ dịch vụ thấy `agent` và `Redis` đều Online, rồi kiểm tra deployment `c40f1f15` ở trạng thái Active và log `/health`, `/ready` trả HTTP 200. Ảnh chụp dashboard và deployment được lưu trong `screenshots/`.
-
-| 26/11/2026 | Bổ sung câu trả lời Part 7 sau khi rà rubric K5. | Codex đối chiếu Exercise 7.4, quality gate và bằng chứng Grafana, cập nhật giải thích trong báo cáo benchmark. | Đã kiểm tra diff và đối chiếu số liệu với ảnh/report hiện có. |
